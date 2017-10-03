@@ -2,6 +2,7 @@
 
 from client import TCPClient as Nw
 import tkinter as tk
+from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 from threading import Thread
 
@@ -9,7 +10,7 @@ class Client(Nw,Thread):
 
         def __init__(self,textbox):
                 Thread.__init__(self)
-                Nw.__init__(1337,"255.255.255.255")
+                Nw.__init__(self,1337,"127.0.0.1")
                 self.textbox = textbox
                 self.r = True
 
@@ -20,26 +21,18 @@ class Client(Nw,Thread):
                                 self.textbox.insert("END",r)
                 del self
 
+
 main = tk.Tk()
 
-# asking for a username
-t = tk.Toplevel()
-tk.Label(t,text="Choose an username : ").pack(side="left",fill="x")
-e = tk.Entry(t)
-e.pack(side="right",fill="x")
-tk.Button(t,text="OK",command=t.destroy).pack(side="bottom")
-t.mainloop()
-
-# retrieving it
-username = e.get() + " : "
-username = username.encode()
+username = askstring("Choisissez un nom", "Identifiez-vous :").encode() + b" : "
 
 # buildong the chat window
 chatbox = ScrolledText(main,state="disabled")
 chatbox.pack(side="top",fill="x",expand=True)
 
-inp = Tk.Entry(main)
+inp = tk.Entry(main)
 inp.pack(side="bottom",fill="x")
+inp.focus_set()
 
 # network side...
 client = Client(chatbox)
@@ -52,11 +45,12 @@ main.bind("<Destroy>", _)
 # this function is called to send a message the user just typed
 def mkpull(entry,nw,name):
         def f(*args,**kwargs):
-                nw.send(username+entry.get().encode())
-                entry.delete(0,"END")
+                msg = entry.get().encode()
+                nw.send(username+msg)
+                entry.delete(0,len(msg))
         return f
 
-inp.bind("<Return>",mkpull(entry,client,username))
+inp.bind("<Return>",mkpull(inp,client,username))
 
 
 client.start()
