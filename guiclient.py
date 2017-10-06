@@ -18,7 +18,10 @@ class Client(Nw,Thread):
                 while self.r :
                         r = self.recv()
                         if r is not None :
-                                self.textbox.insert("END",r)
+                                r = r.decode()
+                                self.textbox["state"] = "normal"
+                                self.textbox.insert("end",r+"\n")
+                                self.textbox["state"] = "disabled"
                 del self
 
 
