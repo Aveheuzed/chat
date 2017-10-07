@@ -50,8 +50,14 @@ you break it with ^C or by deleting self (in the self.do method)
 
     def do(self,msg,sender):
         """This method is called by mainloop for each received segment."""
+        brokenpipes = set()
         for c in self.clients.keys() :
-            c.send(msg)
+            try :
+                c.send(msg)
+            except BrokenPipeError :
+                brokenpipes.add(c)
+        for br in brokenpipes :
+            del self.clients[br]
 
 if __name__ == "__main__" :
     from sys import argv

@@ -15,7 +15,7 @@ class MainServer(TCPServer) :
 
     def do(self,msg,sender):
         info = self.clients[sender]#should be a tuple (hostaddr,port)
-        info = info[0]+":"+str(info[1])
+        info = info[0]+" "+str(info[1])
         info = info.encode()
         print(info,b":",msg,file=logfile)
         if msg == b"\t" :

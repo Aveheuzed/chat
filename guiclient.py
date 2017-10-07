@@ -5,12 +5,14 @@ import tkinter as tk
 from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 from threading import Thread
+from sys import argv
+import re
 
 class Client(Nw,Thread):
 
-        def __init__(self,textbox):
+        def __init__(self,textbox, port, ip):
                 Thread.__init__(self)
-                Nw.__init__(self,1337,"127.0.0.1")
+                Nw.__init__(self,port, ip)
                 self.textbox = textbox
                 self.r = True
 
@@ -27,6 +29,17 @@ class Client(Nw,Thread):
 
 main = tk.Tk()
 
+
+if len(argv) > 1 :
+        ip = argv[1]
+else :
+        ip = askstring("Choix du serveur", "Saisissez l'adresse IP du serveur", initialvalue="localhost")
+
+while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) or ip == "localhost" :
+        ip = askstring("Choix du serveur", "Adresse invalide !\nSaisissez l'adresse IP du serveur", default="localhost")
+
+port = 1337
+
 username = askstring("Choisissez un nom", "Identifiez-vous :").encode() + b" : "
 
 # buildong the chat window
@@ -38,7 +51,7 @@ inp.pack(side="bottom",fill="x")
 inp.focus_set()
 
 # network side...
-client = Client(chatbox)
+client = Client(chatbox, port, ip)
 
 def _(ev):
         client.r = not client.r
@@ -48,9 +61,11 @@ main.bind("<Destroy>", _)
 # this function is called to send a message the user just typed
 def mkpull(entry,nw,name):
         def f(*args,**kwargs):
-                msg = entry.get().encode()
-                nw.send(username+msg)
+                msg = entry.get()
                 entry.delete(0,len(msg))
+                msg = msg.strip().encode()
+                if len(msg):
+                        nw.send(username+msg)
         return f
 
 inp.bind("<Return>",mkpull(inp,client,username))
