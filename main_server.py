@@ -24,8 +24,7 @@ class MainServer(TCPServer) :
             TCPServer.do(self,msg,sender)
 
 
-if __name__ == "__main__" :
-    port = int(argv[1])
-    main = MainServer(port)
-    main.mainloop()
-    logfile.close()
+port = 1337
+main = MainServer(port)
+main.mainloop()
+logfile.close()
