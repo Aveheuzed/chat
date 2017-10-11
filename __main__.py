@@ -3,7 +3,7 @@ from sys import argv
 
 if len(argv) < 2 :
         import guiclient
-elif argv[1] in ("--client,"-c"):
+elif argv[1] in ("--client","-c"):
         del sys.argv[1]
         import guiclient
 elif argv[1] in ("--server","-s") :
