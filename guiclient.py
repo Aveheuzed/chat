@@ -35,8 +35,15 @@ if len(argv) > 1 :
 else :
         ip = askstring("Choix du serveur", "Saisissez l'adresse IP du serveur", initialvalue="localhost")
 
-while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) or ip == "localhost" :
+if ip is None :
+        main.destroy()
+        exit(0)
+
+while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
         ip = askstring("Choix du serveur", "Adresse invalide !\nSaisissez l'adresse IP du serveur", default="localhost")
+        if ip is None :
+                main.destroy()
+                exit(0)
 
 port = 1337
 
