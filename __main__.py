@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import sys
 
-if len(argv) < 2 :
+if len(sys.argv) < 2 :
         import guiclient
-elif argv[1] in ("--client","-c"):
+elif sys.argv[1] in ("--client","-c"):
         del sys.argv[1]
         import guiclient
-elif argv[1] in ("--server","-s") :
+elif sys.argv[1] in ("--server","-s") :
         del sys.argv[1]
         import main_server
-elif argv[1] in ("--killer","-k") :
+elif sys.argv[1] in ("--killer","-k") :
         del sys.argv[1]
         import killer
 else :
