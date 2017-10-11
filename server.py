@@ -19,33 +19,40 @@ To improve this server, just redefine the self.do method."""
         self.co = socket()
         self.co.bind(('',self.port))
         self.clients = dict()# client : info_client
+        self.mainloop_marker = False # set to Tue when/while mainloop is running
 
     def __repr__(self):
         return "TCP server on port {}".format(self.port)
 
     def __del__(self):
         """Shuts the server down."""
-        for c in self.clients :
-            c.close()
-        self.co.close()
+        self.mainloop_marker = False
+        # for c in self.clients :
+        #     c.close()
+        # self.co.close()
 
     def mainloop(self):
         """/!\\ Warning : this function will launch an infinite loop, unless
 you break it with ^C or by deleting self (in the self.do method)
     In that loop, the server will be fully available."""
         self.co.listen()
-        while True :
-            asked = select([self.co,],list(),list(),0)[0]
+        self.mainloop_marker = True
+        while self.mainloop_marker :
+                asked = select([self.co,],list(),list(),0)[0]
 
-            for co in asked :
-                client,info = co.accept()
-                self.clients[client] = info
+                for co in asked :
+                        client,info = co.accept()
+                        self.clients[client] = info
 
-            if len(self.clients):
-                to_read = select(self.clients.keys(),list(),list(),0)[0]
-                for client in to_read :
-                    msg = client.recv(self.msg_len)
-                    self.do(msg,client)
+                if len(self.clients):
+                        to_read = select(self.clients.keys(),list(),list(),0)[0]
+                        for client in to_read :
+                            msg = client.recv(self.msg_len)
+                            self.do(msg,client)
+
+        for c in self.clients :
+            c.close()
+        self.co.close()
 
 
     def do(self,msg,sender):

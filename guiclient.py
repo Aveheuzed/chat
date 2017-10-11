@@ -7,28 +7,41 @@ from tkinter.scrolledtext import ScrolledText
 from threading import Thread
 from sys import argv
 import re
+from time import strftime
 
 class Client(Nw,Thread):
 
-        def __init__(self,textbox, port, ip):
+        def __init__(self,textbox, port, ip, username):
                 Thread.__init__(self)
                 Nw.__init__(self,port, ip)
+                self.username = username
                 self.textbox = textbox
                 self.r = True
+
+        def build_msg(self, msg) :
+                return self.username + b" : "+msg
+
+        def parse_msg(self,msg):
+                msg = msg.decode()
+                return strftime("%H:%S:%M")+" / "+msg+"\n"
 
         def run(self):
                 while self.r :
                         r = self.recv()
                         if r is not None :
-                                r = r.decode()
                                 self.textbox["state"] = "normal"
-                                self.textbox.insert("end",r+"\n")
+                                self.textbox.insert("end",r)
                                 self.textbox["state"] = "disabled"
                 del self
 
 
+port = 1337
 main = tk.Tk()
 
+chatbox = ScrolledText(main,state="disabled")
+inp = tk.Entry(main)
+
+username = askstring("Choisissez un nom", "Identifiez-vous :").encode()
 
 if len(argv) > 1 :
         ip = argv[1]
@@ -39,26 +52,28 @@ if ip is None :
         main.destroy()
         exit(0)
 
-while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
-        ip = askstring("Choix du serveur", "Adresse invalide !\nSaisissez l'adresse IP du serveur", default="localhost")
-        if ip is None :
-                main.destroy()
-                exit(0)
+# asking for the server IP
+while True :
+        while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
+                ip = askstring("Choix du serveur", "Adresse invalide ou inacessible !\nSaisissez l'adresse IP du serveur", default="localhost")
+                if ip is None :
+                        main.destroy()
+                        exit(0)
+        try :
+                client = Client(chatbox, port, ip, username)
+        except :
+                continue
+        else :
+                break
 
-port = 1337
-
-username = askstring("Choisissez un nom", "Identifiez-vous :").encode() + b" : "
+client.co.send(username+b" logged in.")
+# we have to use client.co.send to avoid the client's formatting
 
 # buildong the chat window
-chatbox = ScrolledText(main,state="disabled")
 chatbox.pack(side="top",fill="x",expand=True)
 
-inp = tk.Entry(main)
 inp.pack(side="bottom",fill="x")
 inp.focus_set()
-
-# network side...
-client = Client(chatbox, port, ip)
 
 def _(ev):
         client.r = not client.r
@@ -66,16 +81,16 @@ def _(ev):
 main.bind("<Destroy>", _)
 
 # this function is called to send a message the user just typed
-def mkpull(entry,nw,name):
+def mkpull(entry,nw):
         def f(*args,**kwargs):
                 msg = entry.get()
                 entry.delete(0,len(msg))
                 msg = msg.strip().encode()
                 if len(msg):
-                        nw.send(username+msg)
+                        nw.send(msg)
         return f
 
-inp.bind("<Return>",mkpull(inp,client,username))
+inp.bind("<Return>",mkpull(inp,client))
 
 
 client.start()

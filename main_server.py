@@ -8,23 +8,35 @@ Changes from the base class :
 
 from server import TCPServer
 from sys import argv
-
-logfile = open("./traffic.log","ab")
+from time import strftime
 
 class MainServer(TCPServer) :
 
-    def do(self,msg,sender):
-        info = self.clients[sender]#should be a tuple (hostaddr,port)
-        info = info[0]+" "+str(info[1])
-        info = info.encode()
-        print(info,b":",msg,file=logfile)
-        if msg == b"\t" :
-            del self
-        else :
-            TCPServer.do(self,msg,sender)
+        def __init__(self,port,msg_len=1024,logfile="./traffic.log") :
+                super().__init__(port,msg_len)
+                self.logfile = open(logfile,"at")
+                self.log_append("***Server wakes up***")
+
+        def __del__(self):
+                self.log_append("***Server shut down***")
+                self.logfile.close()
+                super().__del__()
+
+        def do(self,msg,sender):
+                if not len(msg) :
+                        return
+                info = self.clients[sender]#should be a tuple (hostaddr,port)
+                info = info[0]+":"+str(info[1])
+                self.log_append(info,":",msg.decode())
+                if msg == b"\t" :
+                    self.__del__()
+                else :
+                    TCPServer.do(self,msg,sender)
+
+        def log_append(self, msg):
+                print(time.strftime("%d/%m/%Y %H:%M:%S"), msg, sep=" / ", file=self.logfile)
 
 
 port = 1337
 main = MainServer(port)
 main.mainloop()
-logfile.close()
