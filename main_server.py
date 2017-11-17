@@ -27,14 +27,14 @@ class MainServer(TCPServer) :
                         return
                 info = self.clients[sender]#should be a tuple (hostaddr,port)
                 info = info[0]+":"+str(info[1])
-                self.log_append(info,":",msg.decode())
+                self.log_append(info+":"+msg.decode())
                 if msg == b"\t" :
                     self.__del__()
                 else :
                     TCPServer.do(self,msg,sender)
 
         def log_append(self, msg):
-                print(time.strftime("%d/%m/%Y %H:%M:%S"), msg, sep=" / ", file=self.logfile)
+                print(strftime("%d/%m/%Y %H:%M:%S"), msg, sep=" / ", file=self.logfile)
 
 
 port = 1337
