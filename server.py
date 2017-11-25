@@ -35,7 +35,7 @@ To improve this server, just redefine the self.do method."""
         """/!\\ Warning : this function will launch an infinite loop, unless
 you break it with ^C or by deleting self (in the self.do method)
     In that loop, the server will be fully available."""
-        self.co.listen()
+        self.co.listen(5)
         self.mainloop_marker = True
         while self.mainloop_marker :
                 asked = select([self.co,],list(),list(),0)[0]
