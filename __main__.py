@@ -120,20 +120,23 @@ class Server(Thread) :
 def build_client(main, co):
         # retrieving a valid IP
         while True :
-                ip = askstring("Choix du serveur", "Saisissez l'adresse IP du serveur", initialvalue="localhost")
+                ip = askstring("Choix du serveur", "Saisissez l'adresse IP/URL du serveur", initialvalue="localhost")
                 if ip is None :
                         return 1
                 while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
-                        ip = askstring("Choix du serveur", "Adresse invalide ou inacessible !\nSaisissez l'adresse IP du serveur", initialvalue="localhost")
-                        if ip is None :
-                                return 1
+                        try :
+                                ip = socket.gethostbyname(ip)
+                        except socket.gaierror :
+                            ip = askstring("Choix du serveur", "Adresse invalide ou inacessible !\nSaisissez l'adresse IP/URL du serveur", initialvalue="localhost")
+                            if ip is None :
+                                    return 1
 
-                co1 = co.dup() # we do tests on an  other socket
+                co1 = co.dup() # we do tests on an other socket
                 co1.settimeout(0.1)
                 try :
                         co1.connect((ip, PORT))
                 except :
-                        ip = ""
+                        continue
                 else :
                         co1.send(VERSION)
                         if not ord(co1.recv(1)) :
