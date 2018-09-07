@@ -6,7 +6,7 @@ from sys import argv
 # client
 
 from time import strftime
-from socket import socket
+from socket import socket, gaierror, gethostbyname
 from select import select
 from threading import Thread
 
@@ -73,19 +73,19 @@ class Server(Thread) :
         def handle_client(self, myclient):
                 ver = myclient.recv(1)
                 if ver != VERSION :
-                        client.send(b"\x00")#this is False -> negative answer
+                        client.send(b"\x00")
                         client.close()
                         del self.clients[client]
                 else :
-                        myclient.send(b"\x01") # this is True -> positive answer
+                        myclient.send(b"\x01")
                         l = ord(myclient.recv(1)) # the message is that value long
                         username = myclient.recv(l)
                         while username in self.names :
-                                myclient.send(b"\x00") #this is False -> negative answer
+                                myclient.send(b"\x00")
                                 l = ord(myclient.recv(1))
                                 username = myclient.recv(l)
                         self.names.add(username)
-                        myclient.send(b"\x01") # this is True -> positive answer
+                        myclient.send(b"\x01")
                         self.clients.add(myclient)
 
                         self.write_log(repr(myclient.getsockname()).encode()+b" logged in as "+username)
@@ -125,21 +125,20 @@ def build_client(main, co):
                         return 1
                 while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
                         try :
-                                ip = socket.gethostbyname(ip)
-                        except socket.gaierror :
+                                ip = gethostbyname(ip)
+                        except gaierror :
                             ip = askstring("Choix du serveur", "Adresse invalide ou inacessible !\nSaisissez l'adresse IP/URL du serveur", initialvalue="localhost")
                             if ip is None :
                                     return 1
 
-                co1 = co.dup() # we do tests on an other socket
-                co1.settimeout(0.1)
+                co.settimeout(0.1)
                 try :
-                        co1.connect((ip, PORT))
+                        co.connect((ip, PORT))
                 except :
                         continue
                 else :
-                        co1.send(VERSION)
-                        if not ord(co1.recv(1)) :
+                        co.send(VERSION)
+                        if not ord(co.recv(1)) :
                                 showerror("Client obsolète", "Téléchargez une version plus récente sur github.com/Aveheuzed/chat")
                                 return 2
                         break
@@ -147,22 +146,22 @@ def build_client(main, co):
         # logging in
         login = askstring("Choix de votre identifiant", "Identifiez-vous :")
         if login is None :
-                co1.close()
+                co.close()
                 return 1
         login = login.encode()
-        co.send(chr(len(login)).encode()+login)
-        ans = co1.recv(1)
+        co.send(len(login).to_bytes(1, "big") +login)
+        ans = co.recv(1)
         while not ord(ans) :
                 login = askstring("Choix de votre identifiant", "Cet identifiant est déjà pris. Choisissez-en un autre :")
                 if login is None :
-                        co1.close()
+                        co.close()
                         return 1
                 login = login.encode()
-                co1.send(chr(len(login)).encode()+login)
-                ans = co1.recv(1)
+                co.send(chr(len(login)).encode()+login)
+                ans = co.recv(1)
 
         # we got everything !
-        return GUIClient(main, co1, login)
+        return GUIClient(main, co, login)
 
 
 class GUIClient :
