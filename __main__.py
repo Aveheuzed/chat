@@ -48,6 +48,9 @@ class Server(Thread) :
 
                 self.clients = set()
                 self.names = set()
+        
+        def __del__(self):
+                self.co.close()
 
         def run(self):
                 self.co.listen(5)
@@ -123,13 +126,16 @@ def build_client(main, co):
                 ip = askstring("Choix du serveur", "Saisissez l'adresse IP/URL du serveur", initialvalue="localhost")
                 if ip is None :
                         return 1
-                while not re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) and ip != "localhost" :
+                while not ( re.match("[0-9]{1,3}(\\.[0-9]{1,3}){3}", ip) or ip == "localhost" ) :
                         try :
                                 ip = gethostbyname(ip)
                         except gaierror :
                             ip = askstring("Choix du serveur", "Adresse invalide ou inacessible !\nSaisissez l'adresse IP/URL du serveur", initialvalue="localhost")
                             if ip is None :
                                     return 1
+                        else :
+                                break
+                                
 
                 co.settimeout(0.1)
                 try :
@@ -141,7 +147,7 @@ def build_client(main, co):
                         if not ord(co.recv(1)) :
                                 showerror("Client obsolète", "Téléchargez une version plus récente sur github.com/Aveheuzed/chat")
                                 return 2
-                        break
+                        break # should be alone in the "else" block ("flat is better than nested")
 
         # logging in
         login = askstring("Choix de votre identifiant", "Identifiez-vous :")
@@ -216,7 +222,7 @@ class GUIClient :
                         msg = self.co.recv(ord(l))
                         self.chatbox.configure(state=NORMAL)
                         self.chatbox.insert(END, strftime("%d/%m/%Y %H:%M:%S : "))
-                        self.chatbox.insert(END, msg)
+                        self.chatbox.insert(END, msg.decode())
                         self.chatbox.insert(END, "\n")
                         self.chatbox.configure(state=DISABLED)
 
