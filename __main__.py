@@ -20,20 +20,6 @@ import re
 VERSION = b"\x00" #to be incremented upon each protocol change
 PORT = 1337
 
-# proto :
-# 1. the client sends the server its version number ; it must match the server's one
-# 2. the servers replies the client 0 or 1, depending on both have the same version
-# 3. the client proposes  usernames, the servers answers 0 to each username until it is free (no user has taken it yet)
-# 4. the client is free to send chat messages ; the server dispatches everything it receives to each client on step 4.
-#
-# 0. each message but the 0s or 1s server answers and the version number is to be prefixed with its length
-
-# exit codes :
-# 0 : no error
-# 1 : user cancelled
-# 2 : obsolete client
-# 3 : bad command-line argument(s)
-
 
 class Server(Thread) :
 
